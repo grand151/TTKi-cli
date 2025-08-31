@@ -35,5 +35,8 @@ Thumbs.db
 .coverage
 htmlcov/
 
+# Deprecated/Old scripts
+scripts/secure_manus.sh
+
 # Backup files (keep in repo for safety)
 # backup/
