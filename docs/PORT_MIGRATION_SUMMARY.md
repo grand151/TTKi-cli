@@ -38,7 +38,7 @@
 #### Pomocnicze skrypty:
 - `./status_ttki.sh` - Szczegółowy status
 - `./migrate_ports.sh` - Migracja portów (jednorazowa)
-- `./secure_manus.sh` - Zabezpieczenie plików Manus
+- `./secure_ttki.sh` - Zabezpieczenie plików TTKi
 
 ### 🌐 Adresy dostępu po reorganizacji
 

@@ -1,33 +1,38 @@
-# TTKi-cli 🤖🖥️
+# 🤖 TTKi AI Desktop Environment
 
-**Terminal AI + Desktop Environment** - Kompletne środowisko deweloperskie z AI asystentem i graficznym desktopem dostępnym przez przeglądarkę.
+> **Nowoczesne środowisko AI z pełnym desktopem Ubuntu w przeglądarce**
 
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](https://www.docker.com/)
+[![Flask](https://img.shields.io/badge/Flask-2.0+-green?logo=flask)](https://flask.palletsprojects.com/)
+[![VNC](https://img.shields.io/badge/VNC-noVNC-orange)](https://novnc.com/)
+[![AI](https://img.shields.io/badge/AI-Google%20Gemini-red?logo=google)](https://ai.google.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Flask](https://img.shields.io/badge/flask-latest-green.svg)](https://flask.palletsprojects.com/)
 
-## 🌟 Funkcje
+## ✨ Funkcje
 
-- **🤖 AI Terminal** - Inteligentny terminal z Google Gemini AI
-- **🖥️ VNC Desktop** - Pełen graficzny desktop w przeglądarce (noVNC)
-- **🌐 Web Interface** - Nowoczesny interfejs dostępny przez przeglądarkę
-- **🔧 Zarządzanie** - Automatyczne skrypty uruchamiania i monitorowania
-- **📊 Monitoring** - Real-time status usług i portów
-- **🔒 Bezpieczeństwo** - Zabezpieczone pliki konfiguracyjne
+🎯 **Split-Screen Interface** - AI chat + VNC desktop w jednym oknie  
+🖥️ **Ubuntu Desktop** - Pełne środowisko programistyczne w przeglądarce  
+🤖 **AI Assistant** - Integracja z Google Gemini AI  
+🐳 **Docker Ready** - Jeden klick do uruchomienia  
+🎨 **Modern UI** - Dark theme, resizable panels  
+🔧 **Dev Tools** - VS Code, Firefox, Terminal preinstalowane  
 
-## 🚀 Szybki start
-
-### Wymagania
-- Python 3.8+
-- TigerVNC Server
-- Google Gemini API Key
-
-### Instalacja
+## 🚀 Quick Start
 
 ```bash
-# Klonowanie repozytorium
-git clone https://github.com/yourusername/ttki-cli.git
-cd ttki-cli
+# 1. Sklonuj projekt
+git clone <repository>
+cd ttki-ai-desktop
+
+# 2. Skonfiguruj API key
+cp .env.example .env
+nano .env  # Dodaj GEMINI_API_KEY
+
+# 3. Uruchom system
+./start_ttki.sh
+```
+
+**🌟 Gotowe!** Otwórz http://localhost:4001
 
 # Instalacja zależności Python
 pip install -r requirements.txt
@@ -135,7 +140,7 @@ ttki-cli/
 ./ttki.sh clean     # Wyczyść procesy
 
 # Bezpieczeństwo
-./scripts/secure_manus.sh  # Zabezpiecz pliki config
+./scripts/secure_ttki.sh  # Zabezpiecz pliki config
 ```
 
 ## 🧪 Testowanie

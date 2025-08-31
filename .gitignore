@@ -36,7 +36,7 @@ Thumbs.db
 htmlcov/
 
 # Deprecated/Old scripts
-scripts/secure_manus.sh
+scripts/secure_ttki.sh
 
 # Project rules (local development only)
 .rules

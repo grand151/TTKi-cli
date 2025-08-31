@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTKi-cli - AI Desktop Environment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            height: 100vh;
+            background: #0a0a0a;
+        }
+
+        /* Left side - VNC Desktop */
+        .desktop-panel {
+            flex: 1;
+            background: #111111;
+            border-right: 1px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .desktop-header {
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 50px;
+        }
+
+        .desktop-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e5e5e5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .desktop-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .vnc-container {
+            height: calc(100vh - 50px);
+            width: 100%;
+            background: #000;
+        }
+
+        .vnc-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #000;
+        }
+
+        /* Right side - Chat Interface */
+        .chat-panel {
+            width: 400px;
+            min-width: 300px;
+            background: #0f0f0f;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #333;
+            resize: horizontal;
+            overflow: hidden;
+        }
+
+        .resize-handle {
+            width: 4px;
+            background: transparent;
+            cursor: col-resize;
+            position: absolute;
+            left: -2px;
+            top: 0;
+            bottom: 0;
+            z-index: 10;
+        }
+
+        .resize-handle:hover {
+            background: #2563eb;
+        }
+
+        .chat-header {
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+            padding: 12px 20px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e5e5e5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-status {
+            font-size: 12px;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ai-status::before {
+            content: '●';
+            color: #10b981;
+        }
+
+        /* Chat Messages */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scrollbar-width: thin;
+            scrollbar-color: #333 transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .message.user {
+            align-items: flex-end;
+        }
+
+        .message.ai {
+            align-items: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-bubble {
+            background: #2563eb;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.ai .message-bubble {
+            background: #1a1a1a;
+            color: #e5e5e5;
+            border: 1px solid #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #666;
+            margin: 0 16px;
+        }
+
+        .message-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .message.user .message-avatar {
+            background: #2563eb;
+            color: white;
+        }
+
+        .message.ai .message-avatar {
+            background: #10b981;
+            color: white;
+        }
+
+        /* Chat Input */
+        .chat-input-container {
+            background: #1a1a1a;
+            border-top: 1px solid #333;
+            padding: 20px;
+        }
+
+        .chat-input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #e5e5e5;
+            font-size: 14px;
+            resize: none;
+            max-height: 120px;
+            min-height: 44px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .chat-input::placeholder {
+            color: #666;
+        }
+
+        .send-button {
+            background: #2563eb;
+            border: none;
+            border-radius: 10px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-button:hover {
+            background: #1d4ed8;
+        }
+
+        .send-button:disabled {
+            background: #333;
+            cursor: not-allowed;
+        }
+
+        .send-button svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        /* Loading indicator */
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 16px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #666;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+
+        /* Responsive design */
+        @media (max-width: 1024px) {
+            .chat-panel {
+                width: 350px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .desktop-panel {
+                height: 60vh;
+                border-right: none;
+                border-bottom: 1px solid #333;
+            }
+            
+            .chat-panel {
+                width: 100%;
+                height: 40vh;
+                border-left: none;
+            }
+        }
+
+        /* Welcome message styling */
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .welcome-message h3 {
+            color: #e5e5e5;
+            margin-bottom: 8px;
+        }
+
+        .welcome-message p {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Connection status overlay */
+        .connection-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 10;
+        }
+
+        .connection-overlay.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Left Panel - VNC Desktop -->
+        <div class="desktop-panel">
+            <div class="desktop-header">
+                <div class="desktop-title">
+                    🖥️ AI Desktop Environment
+                </div>
+                <div class="desktop-status">
+                    <div class="status-dot"></div>
+                    <span>Ubuntu Sandbox</span>
+                </div>
+            </div>
+            <div class="vnc-container">
+                <div class="connection-overlay" id="vncOverlay">
+                    <div class="spinner"></div>
+                    <div>Inicjalizowanie środowiska AI...</div>
+                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">
+                        Uruchamianie Ubuntu sandbox w kontenerze Docker
+                    </div>
+                </div>
+                <div id="vncContent" style="width: 100%; height: 100%; background: #1a1a1a; display: flex; align-items: center; justify-content: center;">
+                    <div style="text-align: center; color: #666;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🐳</div>
+                        <div style="font-size: 18px; margin-bottom: 8px;">Docker Environment</div>
+                        <div style="font-size: 14px;">Kontener Ubuntu z pełnym środowiskiem graficznym</div>
+                        <div style="font-size: 12px; margin-top: 16px; opacity: 0.7;">
+                            VS Code • Terminal • Firefox • Wszystkie narzędzia deweloperskie
+                        </div>
+                        <button 
+                            onclick="loadVncDesktop()" 
+                            style="margin-top: 20px; background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+                            🚀 Uruchom Desktop
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Chat Interface -->
+        <div class="chat-panel" id="chatPanel">
+            <div class="resize-handle" id="resizeHandle"></div>
+            <div class="chat-header">
+                <div class="chat-title">
+                    🤖 AI Assistant
+                </div>
+                <div class="ai-status" id="aiStatus">
+                    Online
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    <h3>Witaj w TTKi-cli!</h3>
+                    <p>Jestem Twoim AI asystentem. Mogę pomóc Ci w pracy z systemem Ubuntu, programowaniu, administracji i wielu innych zadaniach.</p>
+                    <p style="margin-top: 12px; font-size: 13px;">💡 Napisz wiadomość aby rozpocząć</p>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <span>AI pisze</span>
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <textarea 
+                        class="chat-input" 
+                        id="messageInput" 
+                        placeholder="Napisz wiadomość dla AI..."
+                        rows="1"></textarea>
+                    <button class="send-button" id="sendButton" onclick="sendMessage()">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        // Initialize Socket.IO connection
+        const socket = io();
+        let isConnected = false;
+
+        // DOM elements
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const aiStatus = document.getElementById('aiStatus');
+
+        // Socket.IO event handlers
+        socket.on('connect', function() {
+            isConnected = true;
+            updateAIStatus('Online', true);
+            console.log('Connected to AI server');
+        });
+
+        socket.on('disconnect', function() {
+            isConnected = false;
+            updateAIStatus('Offline', false);
+            console.log('Disconnected from AI server');
+        });
+
+        socket.on('message', function(data) {
+            hideTypingIndicator();
+            addMessage('ai', data);
+        });
+
+        // Functions
+        function updateAIStatus(status, online) {
+            aiStatus.textContent = status;
+            aiStatus.style.color = online ? '#10b981' : '#ef4444';
+        }
+
+        // Chat panel resizing functionality
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+
+        function initResize() {
+            const resizeHandle = document.querySelector('.resize-handle');
+            const chatPanel = document.querySelector('.chat-panel');
+            
+            resizeHandle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = parseInt(document.defaultView.getComputedStyle(chatPanel).width, 10);
+                document.addEventListener('mousemove', doResize);
+                document.addEventListener('mouseup', stopResize);
+                e.preventDefault();
+            });
+        }
+
+        function doResize(e) {
+            if (!isResizing) return;
+            const chatPanel = document.querySelector('.chat-panel');
+            const container = document.querySelector('.main-container');
+            const newWidth = startWidth + (startX - e.clientX); // Odwrócony kierunek dla intuicyjnego resizing
+            const containerWidth = container.clientWidth;
+            
+            // Limit chat panel width between 250px and 60% of container
+            const minWidth = 250;
+            const maxWidth = containerWidth * 0.6;
+            
+            if (newWidth >= minWidth && newWidth <= maxWidth) {
+                chatPanel.style.width = newWidth + 'px';
+            }
+        }
+
+        function stopResize() {
+            isResizing = false;
+            document.removeEventListener('mousemove', doResize);
+            document.removeEventListener('mouseup', stopResize);
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            initResize();
+            loadVncDesktop(); // Automatycznie ładuj VNC desktop przy starcie
+        });
+
+        function hideVncOverlay() {
+            const overlay = document.getElementById('vncOverlay');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 2000);
+        }
+
+        function loadVncDesktop() {
+            const vncContent = document.getElementById('vncContent');
+            const overlay = document.getElementById('vncOverlay');
+            
+            // Show loading overlay
+            overlay.classList.remove('hidden');
+            
+            // Create iframe
+            const iframe = document.createElement('iframe');
+            iframe.className = 'vnc-iframe';
+            iframe.src = `${window.location.protocol}//${window.location.hostname}:4051/?password=ttki123&resize=scale&autoconnect=true`;
+            iframe.title = 'VNC Desktop';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            iframe.style.background = '#000';
+            
+            iframe.onload = function() {
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 3000);
+            };
+            
+            iframe.onerror = function() {
+                vncContent.innerHTML = `
+                    <div style="text-align: center; color: #ef4444; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                        <div style="font-size: 18px; margin-bottom: 8px;">Błąd połączenia</div>
+                        <div style="font-size: 14px; margin-bottom: 16px;">Nie można połączyć się z desktopem VNC</div>
+                        <button onclick="loadVncDesktop()" style="background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">
+                            🔄 Spróbuj ponownie
+                        </button>
+                    </div>
+                `;
+                overlay.classList.add('hidden');
+            };
+            
+            // Replace content
+            vncContent.innerHTML = '';
+            vncContent.appendChild(iframe);
+        }
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || !isConnected) return;
+
+            // Add user message to chat
+            addMessage('user', message);
+            
+            // Clear input
+            messageInput.value = '';
+            autoResizeTextarea();
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Send to AI
+            socket.emit('message', message);
+        }
+
+        function addMessage(sender, content) {
+            const welcomeMessage = chatMessages.querySelector('.welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const time = new Date().toLocaleTimeString('pl-PL', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${sender === 'user' ? 'TY' : 'AI'}</div>
+                <div class="message-bubble">${escapeHtml(content)}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            typingIndicator.style.display = 'flex';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            typingIndicator.style.display = 'none';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function autoResizeTextarea() {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+        }
+
+        // Event listeners
+        messageInput.addEventListener('input', autoResizeTextarea);
+        
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-resize textarea on load
+        autoResizeTextarea();
+
+        // Periodic connection check
+        setInterval(function() {
+            if (!socket.connected && isConnected) {
+                isConnected = false;
+                updateAIStatus('Reconnecting...', false);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

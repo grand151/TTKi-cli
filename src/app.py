@@ -157,6 +157,14 @@ socketio = SocketIO(app)
 
 @app.route("/")
 def index():
+    response = app.make_response(render_template("ai_interface.html"))
+    response.headers['Permissions-Policy'] = 'fullscreen=*, clipboard-read=*, clipboard-write=*'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    return response
+
+@app.route("/landing")
+def landing():
+    """Legacy landing page"""
     response = app.make_response(render_template("index.html"))
     response.headers['Permissions-Policy'] = 'fullscreen=*, clipboard-read=*, clipboard-write=*'
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'

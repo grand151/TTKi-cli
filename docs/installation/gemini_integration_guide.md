@@ -1,6 +1,6 @@
 # Instrukcje integracji z Gemini API
 
-Ten przewodnik wyjaśnia, jak zintegrować Gemini API z aplikacją Manus Computer w celu korzystania z modelu `gemini-2.5-flash` z własnym promptem.
+Ten przewodnik wyjaśnia, jak zintegrować Gemini API z aplikacją TTKi Computer w celu korzystania z modelu `gemini-2.5-flash` z własnym promptem.
 
 ## Krok 1: Instalacja biblioteki Gemini API
 
@@ -67,7 +67,7 @@ def index():
 def execute_in_sandbox(command):
     try:
         result = subprocess.run(
-            ['docker', 'exec', 'manus-computer-container', 'bash', '-c', command],
+            ['docker', 'exec', 'ttki-computer-container', 'bash', '-c', command],
             capture_output=True,
             text=True,
             timeout=30

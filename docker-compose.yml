@@ -1,0 +1,65 @@
+services:
+  ttki-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ttki/ai-terminal:latest
+    container_name: ttki-ai
+    ports:
+      - "4001:4001"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_API_KEY_2=${GEMINI_API_KEY_2}
+      - FLASK_ENV=production
+    volumes:
+      - ./logs:/app/logs
+      - ttki-bridge:/shared
+    restart: unless-stopped
+    networks:
+      - ttki-network
+
+  ttki-desktop:
+    build:
+      context: .
+      dockerfile: Dockerfile.desktop
+    image: ttki/desktop-vnc:latest
+    container_name: ttki-desktop
+    ports:
+      - "4051:4051"
+      - "5950:5950"
+    environment:
+      - DISPLAY=:50
+      - USER=ttki
+    volumes:
+      - ./desktop-data:/home/ttki/data
+      - ttki-bridge:/shared
+    restart: unless-stopped
+    networks:
+      - ttki-network
+    depends_on:
+      - ttki-ai
+
+  ttki-landing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ttki/ai-terminal:latest
+    container_name: ttki-landing
+    ports:
+      - "4000:4000"
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+    networks:
+      - ttki-network
+    command: python3 landing_server.py
+
+networks:
+  ttki-network:
+    driver: bridge
+
+volumes:
+  desktop-data:
+    driver: local
+  ttki-bridge:
+    driver: local

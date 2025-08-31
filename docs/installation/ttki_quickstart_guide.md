@@ -67,7 +67,7 @@ TTKi-cli oferuje wygodne polecenia zarządzania:
 System TTKi-cli można dostosować:
 
 * Porty usług w pliku `ports.conf`
-* Konfiguracja AI w plikach Manus
+* Konfiguracja AI w plikach TTKi
 * Ustawienia VNC w skryptach systemowych
 
 ## Rozwiązywanie problemów
@@ -93,7 +93,7 @@ Gratulacje! Teraz jesteś częścią społeczności TTKi-cli! Możesz:
 
 TTKi-cli zawiera zabezpieczenia:
 
-* Ochrona plików Manus przed przypadkowym usunięciem
+* Ochrona plików TTKi przed przypadkowym usunięciem
 * Automatyczne kopie zapasowe
 * Kontrola wersji przez Git
 * Bezpieczne zarządzanie sesjami

@@ -1,0 +1,208 @@
+#!/usr/bin/env python3
+"""
+TTKi-cli Landing Page
+Simple landing page for TTKi AI Terminal environment
+"""
+
+from flask import Flask, render_template_string
+import os
+
+app = Flask(__name__)
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key')
+
+# Updated, more modern landing page template
+LANDING_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTKi-cli - AI Desktop Environment</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0f;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        .background-blurs {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .blur-1 {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: rgba(118, 75, 162, 0.3);
+            border-radius: 50%;
+            filter: blur(150px);
+            top: -150px;
+            left: -150px;
+        }
+
+        .blur-2 {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: rgba(0, 245, 255, 0.25);
+            border-radius: 50%;
+            filter: blur(120px);
+            bottom: -100px;
+            right: -100px;
+        }
+
+        .header-logo {
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: linear-gradient(45deg, #00f5ff, #c300ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+        }
+
+        .glass-card {
+            background: rgba(17, 24, 39, 0.5); /* bg-gray-900 with opacity */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-8px);
+            background: rgba(17, 24, 39, 0.7);
+            border-color: rgba(0, 245, 255, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .service-btn {
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 198, 255, 0.2);
+        }
+
+        .service-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 198, 255, 0.4);
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 8px rgba(0, 245, 255, 0.7);
+        }
+
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative">
+
+    <div class="background-blurs">
+        <div class="blur-1"></div>
+        <div class="blur-2"></div>
+    </div>
+
+    <div class="w-full max-w-5xl mx-auto z-10">
+        <header class="text-center mb-12 md:mb-16">
+            <div class="header-logo mb-4">TTKi-cli</div>
+            <h1 class="hero-title text-4xl md:text-6xl text-white mb-4">
+                Twoje Środowisko Pracy z <span class="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500">AI</span>
+            </h1>
+            <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-400">
+                Połączenie mocy sztucznej inteligencji z elastycznością pulpitu Ubuntu. Pracuj wydajniej z asystentem AI i pełnym środowiskiem deweloperskim w jednym miejscu.
+            </p>
+        </header>
+
+        <main>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- AI Terminal + Desktop Card -->
+                <div class="glass-card rounded-2xl p-8 flex flex-col">
+                    <h3 class="text-2xl font-bold text-white mb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-cyan-400 glow-text"><path d="M12 8V4H8"/><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 2v2"/><path d="M9 2v2"/></svg>
+                        AI + Desktop
+                    </h3>
+                    <p class="text-gray-400 mb-6 flex-grow">
+                        Kompletny interfejs łączący czat AI z pulpitem Ubuntu w jednym, podzielonym oknie.
+                    </p>
+                    <a href="http://localhost:4001" class="service-btn text-white font-bold py-3 px-6 rounded-full text-center">
+                        Uruchom
+                    </a>
+                </div>
+
+                <!-- VNC Desktop Only Card -->
+                <div class="glass-card rounded-2xl p-8 flex flex-col">
+                    <h3 class="text-2xl font-bold text-white mb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-cyan-400 glow-text"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        Tylko Desktop
+                    </h3>
+                    <p class="text-gray-400 mb-6 flex-grow">
+                        Samodzielny pulpit Ubuntu z VS Code, Firefox i gotowymi narzędziami deweloperskimi.
+                    </p>
+                    <a href="http://localhost:4051" class="service-btn text-white font-bold py-3 px-6 rounded-full text-center">
+                        Otwórz Desktop
+                    </a>
+                </div>
+
+                <!-- System Status Card -->
+                <div class="glass-card rounded-2xl p-8 flex flex-col">
+                    <h3 class="text-2xl font-bold text-white mb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-cyan-400 glow-text"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                        Status Systemu
+                    </h3>
+                    <p class="text-gray-400 mb-6 flex-grow">
+                        Sprawdź stan wszystkich serwisów, dostępne porty i kondycję całej aplikacji.
+                    </p>
+                    <a href="http://localhost:4001/health" class="service-btn text-white font-bold py-3 px-6 rounded-full text-center">
+                        Sprawdź Status
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <footer class="text-center mt-12 md:mt-16 text-gray-500 text-sm">
+            <p>TTKi-cli v0.2.1 | Powered by Google Gemini AI & Docker</p>
+            <p class="font-mono mt-2">
+                VNC Direct: <span class="text-gray-400">localhost:5950</span> | 
+                Health: <a href="http://localhost:4001/health" class="text-cyan-400 hover:underline">localhost:4001/health</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
+"""
+
+@app.route('/')
+def landing():
+    return render_template_string(LANDING_TEMPLATE)
+
+@app.route('/health')
+def health():
+    return {
+        "service": "ttki-landing",
+        "status": "healthy",
+        "version": "0.2.1",
+        "services": {
+            "ai_terminal": "http://localhost:4001",
+            "vnc_desktop": "http://localhost:4051", 
+            "vnc_direct": "localhost:5950"
+        }
+    }
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 4000))
+    app.run(host='0.0.0.0', port=port, debug=False)

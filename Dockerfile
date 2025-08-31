@@ -1,45 +1,44 @@
-FROM ubuntu:22.04
+# TTKi AI Terminal Application
+FROM python:3.11-slim
 
-# Avoid interactive prompts
-ENV DEBIAN_FRONTEND=noninteractive
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV FLASK_APP=app.py
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    sudo \
-    x11vnc \
-    xvfb \
-    python3 \
-    python3-pip \
-    python3-venv \
-    git \
-    gcc \
-    g++ \
-    make \
-    cmake \
-    nodejs \
-    npm \
-    docker.io \
-    sqlite3 \
-    jq \
     curl \
-    wget \
+    docker.io \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python packages
-RUN pip3 install numpy pandas matplotlib seaborn scikit-learn flask fastapi requests jupyter
+# Copy requirements first for better caching
+COPY requirements.txt .
 
-# Create a non-root user
-RUN useradd -m -s /bin/bash ubuntu
-RUN echo "ubuntu:ubuntu" | chpasswd
-RUN adduser ubuntu sudo
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Set up the development environment
-USER ubuntu
-WORKDIR /home/ubuntu
-RUN mkdir dev_environment
+# Copy application code
+COPY . .
 
-# Expose the VNC port
-EXPOSE 5900
+# Create logs directory
+RUN mkdir -p logs
 
-# Start Xvfb and x11vnc
-CMD ["sh", "-c", "Xvfb :1 -screen 0 1024x768x16 & x11vnc -display :1 -forever -nopw -create"]
+# Create non-root user and add to docker group
+RUN useradd -m -u 1000 ttki && \
+    usermod -aG docker ttki && \
+    chown -R ttki:ttki /app
+USER ttki
+
+# Expose port
+EXPOSE 4001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:4001/health || exit 1
+
+# Run application
+CMD ["python", "app.py"]
