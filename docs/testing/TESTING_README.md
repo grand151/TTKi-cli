@@ -1,8 +1,8 @@
-# 🧪 Dokumentacja Testów - Aplikacja Terminala AI
+# 🧪 TTKi-cli - Dokumentacja Testów
 
 ## Przegląd
 
-Przygotowałem kompleksowy zestaw testów dla aplikacji terminala AI w stylu Bolt, który sprawdza różne scenariusze użycia i funkcjonalności.
+Przygotowałem kompleksowy zestaw testów dla aplikacji terminala AI, który sprawdza różne scenariusze użycia i funkcjonalności.
 
 ## 📁 Pliki Testowe
 
@@ -72,8 +72,8 @@ Przygotowałem kompleksowy zestaw testów dla aplikacji terminala AI w stylu Bol
 
 ### Opcja 1: Uproszczone testy (zalecane na start)
 ```bash
-cd "/home/ttki/Pobrane/Jak stworzyć aplikację terminala AI w stylu Bolt"
-source venv/bin/activate
+cd "ścieżka/do/twojego/projektu/TTKi-cli"
+source venv/bin/activate  # jeśli używasz venv
 python test_scenarios_simple.py --run
 ```
 

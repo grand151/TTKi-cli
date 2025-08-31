@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Kompleksowy zestaw testów dla aplikacji terminala AI w stylu Bolt.
-Testuje różne scenariusze użycia i funkcjonalności.
+TTKi-cli Test Scenarios
+
+Kompleksowy zestaw testów dla aplikacji terminala AI.
+Sprawdza wszystkie główne funkcjonalności i scenariusze użycia.
 """
 
 import unittest

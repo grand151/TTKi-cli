@@ -1,8 +1,8 @@
-# Projekt Architektury Systemu Budowania Aplikacji Opartego na AI (Klon Bolt.new)
+# TTKi-cli - Projekt Architektury Systemu Terminal AI
 
 ## Wprowadzenie
 
-Niniejszy dokument przedstawia projekt architektury systemu budowania aplikacji, inspirowanego funkcjonalnościami platformy Bolt.new. Celem jest stworzenie elastycznego i skalowalnego rozwiązania, które umożliwi użytkownikom generowanie i modyfikowanie aplikacji webowych za pomocą interakcji tekstowych z modelem sztucznej inteligencji. Architektura uwzględnia kluczowe aspekty, takie jak przetwarzanie języka naturalnego, generowanie kodu, zarządzanie projektem, wersjonowanie oraz hosting.
+Niniejszy dokument przedstawia projekt architektury systemu terminal AI TTKi-cli. Celem jest stworzenie elastycznego i skalowalnego rozwiązania, które umożliwi użytkownikom interakcję z terminalem za pomocą sztucznej inteligencji oraz dostęp do środowiska pulpitu przez VNC. Architektura uwzględnia kluczowe aspekty, takie jak przetwarzanie języka naturalnego, wykonywanie poleceń, zarządzanie sesjami oraz interfejs webowy.
 
 ## 1. Przegląd Architektury
 
@@ -195,5 +195,5 @@ Ten serwis będzie śledził i zarządzał zużyciem tokenów przez użytkownik�
 
 ## 8. Podsumowanie
 
-Przedstawiona architektura stanowi solidną podstawę do zbudowania systemu klonującego funkcjonalności Bolt.new. Kluczowe jest skupienie się na modułowości, skalowalności i bezpieczeństwie, a także na efektywnym wykorzystaniu modeli LLM. Następnym etapem będzie implementacja poszczególnych komponentów, zaczynając od backendu.
+Przedstawiona architektura stanowi solidną podstawę do rozwoju systemu TTKi-cli. Kluczowe jest skupienie się na modułowości, skalowalności i bezpieczeństwie, a także na efektywnym wykorzystaniu modeli LLM. Następnym etapem będzie dalsze rozwijanie poszczególnych komponentów i funkcjonalności.
 

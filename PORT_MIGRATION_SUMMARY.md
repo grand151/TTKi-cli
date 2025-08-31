@@ -45,7 +45,7 @@
 | Usługa | URL | Opis |
 |--------|-----|------|
 | **Główny Portal** | http://localhost:4000 | Centralny dashboard |
-| **AI Terminal** | http://localhost:4001 | Terminal AI (Bolt-style) |
+| **AI Terminal** | http://localhost:4001 | Terminal AI |
 | **Desktop VNC** | http://localhost:4051 | Pulpit przez przeglądarkę |
 
 ### 🔧 Konfiguracja portów

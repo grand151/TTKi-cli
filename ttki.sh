@@ -29,7 +29,7 @@ print_banner() {
     echo -e "${BLUE}"
     echo "╔════════════════════════════════════════╗"
     echo "║            TTKi-cli Manager            ║"
-    echo "║   Terminal AI w stylu Bolt + Desktop   ║"
+    echo "║      Terminal AI + Desktop Environment ║"
     echo "╚════════════════════════════════════════╝"
     echo -e "${NC}"
 }
