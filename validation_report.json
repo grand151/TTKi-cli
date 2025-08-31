@@ -1,0 +1,49 @@
+{
+  "timestamp": "2025-08-31T20:32:58.173354",
+  "summary": {
+    "total_tests": 4,
+    "passed_tests": 1,
+    "failed_tests": 3,
+    "success_rate": 0.25,
+    "duration_seconds": 0.355744
+  },
+  "test_results": [
+    {
+      "test_name": "Database Basic Operations",
+      "success": true,
+      "details": {
+        "basic_query": true,
+        "required_tables": true,
+        "total_tables": 21,
+        "vector_support": true
+      },
+      "errors": []
+    },
+    {
+      "test_name": "CRUD Operations",
+      "success": false,
+      "details": {
+        "agent_crud": true
+      },
+      "errors": [
+        "column \"title\" of relation \"tasks\" does not exist"
+      ]
+    },
+    {
+      "test_name": "Analytics Recording",
+      "success": false,
+      "details": {},
+      "errors": [
+        "column \"metric_type\" of relation \"system_analytics\" does not exist"
+      ]
+    },
+    {
+      "test_name": "Vector Operations",
+      "success": false,
+      "details": {},
+      "errors": [
+        "column \"content\" of relation \"learning_events\" does not exist"
+      ]
+    }
+  ]
+}

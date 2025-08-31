@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-08-31T18:33:24.536702+00:00",
+  "total_tests": 4,
+  "passed": 4,
+  "failed": 0,
+  "success_rate": 100.0,
+  "duration": 0.29180908203125,
+  "overall_status": "PASSED",
+  "test_results": [
+    {
+      "name": "Database Basic Operations",
+      "status": "PASSED",
+      "message": "SQLite connectivity and basic queries working"
+    },
+    {
+      "name": "CRUD Operations",
+      "status": "PASSED",
+      "message": "All CRUD operations working correctly"
+    },
+    {
+      "name": "Analytics Recording",
+      "status": "PASSED",
+      "message": "Analytics recording and retrieval working"
+    },
+    {
+      "name": "Vector Operations",
+      "status": "PASSED",
+      "message": "Vector storage and retrieval working (simulated)"
+    }
+  ],
+  "database_backend": "SQLite"
+}

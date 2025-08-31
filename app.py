@@ -19,13 +19,21 @@ from typing import Dict, List, Tuple, Optional, Any, Callable
 
 from flask import Flask, render_template, make_response
 
-# Import Agent Service for context management
+# Import Multi-Agent System with fallback to legacy
 try:
-    from agent_service import ttki_agent
-    AGENT_SERVICE_AVAILABLE = True
+    from agents.multi_agent_integration import multi_agent_system, process_user_request
+    MULTI_AGENT_AVAILABLE = True
+    print("TTKi Multi-Agent System initialized")
 except ImportError:
-    AGENT_SERVICE_AVAILABLE = False
-    print("Agent service not available - running in legacy mode")
+    MULTI_AGENT_AVAILABLE = False
+    # Fallback to legacy agent service
+    try:
+        from agent_service import ttki_agent
+        AGENT_SERVICE_AVAILABLE = True
+        print("Using legacy agent service")
+    except ImportError:
+        AGENT_SERVICE_AVAILABLE = False
+        print("No agent system available - running in basic mode")
 from flask_socketio import SocketIO
 
 ROOT = Path(__file__).parent
@@ -701,57 +709,102 @@ Example responses for desktop operations:
 
 def agent_execute_task(task: str, context: Optional[Dict] = None) -> Dict[str, Any]:
     """
-    Execute task using Agent Service with persistent context
-    Rozwiązuje problem z brakiem kontekstu między akcjami
+    Execute task using Multi-Agent System with intelligent routing
+    Enhanced with PlannerAgent as entry point
     """
-    if not AGENT_SERVICE_AVAILABLE:
-        return {
-            "success": False,
-            "error": "Agent service not available",
-            "fallback": "Using legacy functions"
-        }
-    
-    try:
-        # Use async event loop for agent execution
-        import asyncio
-        
-        # Check if there's already an event loop
+    # Try Multi-Agent System first
+    if MULTI_AGENT_AVAILABLE:
         try:
-            loop = asyncio.get_running_loop()
-            # If there is, use create_task
-            task_result = loop.run_until_complete(ttki_agent.execute_task(task, context))
-        except RuntimeError:
-            # No event loop, create one
-            task_result = asyncio.run(ttki_agent.execute_task(task, context))
-        
-        return task_result
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "error": f"Agent execution failed: {str(e)}",
-            "task": task
-        }
+            import asyncio
+            
+            # Check if there's already an event loop
+            try:
+                loop = asyncio.get_running_loop()
+                task_result = loop.run_until_complete(process_user_request(task, context))
+            except RuntimeError:
+                # No event loop, create one
+                task_result = asyncio.run(process_user_request(task, context))
+            
+            return task_result
+            
+        except Exception as e:
+            print(f"Multi-Agent system failed, falling back to legacy: {str(e)}")
+    
+    # Fallback to legacy agent service
+    if AGENT_SERVICE_AVAILABLE:
+        try:
+            import asyncio
+            
+            try:
+                loop = asyncio.get_running_loop()
+                task_result = loop.run_until_complete(ttki_agent.execute_task(task, context))
+            except RuntimeError:
+                task_result = asyncio.run(ttki_agent.execute_task(task, context))
+            
+            return task_result
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Legacy agent execution failed: {str(e)}",
+                "task": task
+            }
+    
+    # No agent system available
+    return {
+        "success": False,
+        "error": "No agent system available",
+        "fallback": "Using basic functions only"
+    }
 
 def agent_get_context() -> Dict[str, Any]:
     """
-    Get current agent context and state
-    Pozwala LLM zobaczyć co agent pamięta
+    Get current agent context and state from Multi-Agent System
+    Enhanced with system-wide status
     """
-    if not AGENT_SERVICE_AVAILABLE:
-        return {"error": "Agent service not available"}
+    # Try Multi-Agent System first
+    if MULTI_AGENT_AVAILABLE:
+        try:
+            return {
+                "success": True,
+                "system_type": "multi_agent",
+                "status": multi_agent_system.get_system_status(),
+                "capabilities": ["intelligent_routing", "task_decomposition", "agent_coordination"]
+            }
+        except Exception as e:
+            print(f"Multi-Agent context failed: {str(e)}")
     
-    try:
-        return {
-            "success": True,
-            "cursor_position": ttki_agent.get_cursor_position(),
-            "recent_actions": [
-                {
-                    "timestamp": action.timestamp.isoformat(),
-                    "type": action.action_type.value,
-                    "name": action.action_name,
-                    "success": action.success
-                }
+    # Fallback to legacy agent
+    if AGENT_SERVICE_AVAILABLE:
+        try:
+            return {
+                "success": True,
+                "system_type": "legacy_agent",
+                "cursor_position": ttki_agent.get_cursor_position(),
+                "recent_actions": [
+                    {
+                        "timestamp": action.timestamp.isoformat(),
+                        "type": action.action_type.value,
+                        "name": action.action_name,
+                        "success": action.success
+                    }
+                    for action in ttki_agent.history[-5:]  # Last 5 actions
+                ],
+                "current_context": ttki_agent.state.active_context.value,
+                "session_duration": (datetime.now() - ttki_agent.state.session_start).total_seconds()
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Failed to get agent context: {str(e)}"
+            }
+    
+    # No agent system available
+    return {
+        "success": False,
+        "error": "No agent system available",
+        "system_type": "basic_mode"
+    }
                 for action in ttki_agent.get_recent_actions(5)
             ],
             "memory_keys": list(ttki_agent.memory.keys()),
