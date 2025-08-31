@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTKi-cli - Portal Główny</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        .services {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .service-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+        }
+        .service-card h2 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        .service-card p {
+            opacity: 0.9;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .btn {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .status-section {
+            margin-top: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .status-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .status-online {
+            color: #4ade80;
+        }
+        .status-offline {
+            color: #f87171;
+        }
+        .footer {
+            margin-top: 60px;
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 TTKi-cli</h1>
+        <p class="subtitle">Terminal AI + Desktop Environment</p>
+        <p>Kompletne środowisko deweloperskie z AI asystentem i graficznym desktopem dostępnym przez przeglądarkę.</p>
+        
+        <div class="services">
+            <div class="service-card">
+                <h2>🤖 AI Terminal</h2>
+                <p>Inteligentny terminal z asystentem AI. Wykonuj komendy, otrzymuj pomoc i automatyzuj zadania używając sztucznej inteligencji.</p>
+                <a href="http://localhost:4001" class="btn" target="_blank">Otwórz AI Terminal</a>
+            </div>
+            
+            <div class="service-card">
+                <h2>🖥️ Desktop VNC</h2>
+                <p>Pełny desktop Ubuntu dostępny przez przeglądarkę. Idealne do graficznych aplikacji i zaawansowanych zadań deweloperskich.</p>
+                <a href="http://localhost:4051/vnc.html?autoconnect=true&resize=scale" class="btn" target="_blank">Otwórz Desktop</a>
+            </div>
+        </div>
+        
+        <div class="status-section">
+            <h2>📊 Status Usług</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <strong>Landing Page</strong><br>
+                    <span id="landing-status" class="status-offline">Sprawdzanie...</span><br>
+                    Port: 4000
+                </div>
+                <div class="status-item">
+                    <strong>AI Terminal</strong><br>
+                    <span id="ai-status" class="status-offline">Sprawdzanie...</span><br>
+                    Port: 4001
+                </div>
+                <div class="status-item">
+                    <strong>noVNC Web</strong><br>
+                    <span id="vnc-status" class="status-offline">Sprawdzanie...</span><br>
+                    Port: 4051
+                </div>
+                <div class="status-item">
+                    <strong>VNC Server</strong><br>
+                    <span id="vncserver-status" class="status-offline">Sprawdzanie...</span><br>
+                    Port: 5950
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>TTKi-cli v0.2.1 | Powered by Google Gemini AI | MIT License</p>
+            <p>🔧 Zarządzanie: <code>./ttki.sh [start|stop|restart|status]</code></p>
+        </div>
+    </div>
+
+    <script>
+        // Status checker
+        const services = [
+            { id: 'landing-status', url: 'http://localhost:4000', name: 'Landing Page' },
+            { id: 'ai-status', url: 'http://localhost:4001', name: 'AI Terminal' },
+            { id: 'vnc-status', url: 'http://localhost:4051', name: 'noVNC Web' },
+        ];
+
+        async function checkServiceStatus(service) {
+            try {
+                const response = await fetch(service.url, { 
+                    method: 'HEAD',
+                    mode: 'no-cors'
+                });
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function updateStatus() {
+            for (const service of services) {
+                const statusElement = document.getElementById(service.id);
+                const isOnline = await checkServiceStatus(service);
+                
+                if (isOnline) {
+                    statusElement.textContent = '🟢 Online';
+                    statusElement.className = 'status-online';
+                } else {
+                    statusElement.textContent = '🔴 Offline';
+                    statusElement.className = 'status-offline';
+                }
+            }
+            
+            // VNC Server status (assume online if noVNC is online)
+            const vncServerStatus = document.getElementById('vncserver-status');
+            const noVNCOnline = document.getElementById('vnc-status').className === 'status-online';
+            if (noVNCOnline) {
+                vncServerStatus.textContent = '🟢 Online';
+                vncServerStatus.className = 'status-online';
+            } else {
+                vncServerStatus.textContent = '🔴 Offline';
+                vncServerStatus.className = 'status-offline';
+            }
+        }
+
+        // Initial status check
+        updateStatus();
+        
+        // Update status every 30 seconds
+        setInterval(updateStatus, 30000);
+    </script>
+</body>
+</html>

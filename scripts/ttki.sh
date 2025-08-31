@@ -150,9 +150,21 @@ start_ai_terminal() {
 start_landing_page() {
     echo -e "${BLUE}🏠 Uruchamianie Landing Page...${NC}"
     
-    python3 -m http.server $LANDING_PAGE_PORT >/dev/null 2>&1 &
+    if [ ! -f "index.html" ]; then
+        echo -e "${RED}❌ Plik index.html nie został znaleziony${NC}"
+        return 1
+    fi
     
-    echo -e "${GREEN}✅ Landing Page uruchomiona na porcie $LANDING_PAGE_PORT${NC}"
+    python3 scripts/landing_server.py >logs/landing.log 2>&1 &
+    sleep 2
+    
+    if ss -tuln | grep -q ":$LANDING_PAGE_PORT "; then
+        echo -e "${GREEN}✅ Landing Page uruchomiona na porcie $LANDING_PAGE_PORT${NC}"
+    else
+        echo -e "${RED}❌ Błąd uruchamiania Landing Page${NC}"
+        tail -5 logs/landing.log
+        return 1
+    fi
 }
 
 start_all() {
