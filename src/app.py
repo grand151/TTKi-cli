@@ -1,6 +1,6 @@
-"""Minimal app module for Manus prompt + functions.
+"""TTKi-cli AI Terminal Application
 
-This file loads the prompt and function definitions from external text files.
+Aplikacja Flask z integracją Google Gemini AI dla inteligentnego terminala.
 """
 
 from __future__ import annotations
@@ -17,6 +17,11 @@ from typing import Dict, List, Tuple, Optional, Any, Callable
 from flask import Flask, render_template, make_response
 from flask_socketio import SocketIO
 
+try:
+    from . import __version__
+except ImportError:
+    __version__ = "0.2.0"
+
 ROOT = Path(__file__).parent
 
 
@@ -30,8 +35,9 @@ def load_text_file(filename: str, fallback: str = "Plik niedostępny") -> str:
     return fallback
 
 
-PROMPT_TEXT = load_text_file("Manus_Prompt.txt", "# Manus prompt not found.")
-FUNCTIONS_TEXT = load_text_file("Manus_Functions.txt", "{}")
+# Konfiguracja
+PROMPT_TEXT = load_text_file("../config/prompt.txt", "# AI prompt not found.")
+FUNCTIONS_TEXT = load_text_file("../config/functions.txt", "{}")
 
 
 def extract_json_objects(text: str) -> List[Dict]:
@@ -69,7 +75,7 @@ def extract_json_objects(text: str) -> List[Dict]:
     return objs
 
 
-def manus_shell_exec(id: str = "", exec_dir: str = "", command: str = "") -> str:
+def shell_exec_tool(id: str = "", exec_dir: str = "", command: str = "") -> str:
     if not command:
         return ""
     try:
@@ -79,7 +85,7 @@ def manus_shell_exec(id: str = "", exec_dir: str = "", command: str = "") -> str
         return f"shell_exec error: {e}"
 
 
-def manus_message_notify_user(text: str, attachments: Optional[List[str]] = None) -> str:
+def notify_user_tool(text: str, attachments: Optional[List[str]] = None) -> str:
     if attachments:
         return f"Notify user: {text} (attachments: {attachments})"
     return f"Notify user: {text}"
@@ -117,6 +123,8 @@ def message_notify_user(text: str, attachments=None) -> str:
 TOOL_FUNCTIONS = {
     "shell_exec": shell_exec,
     "message_notify_user": message_notify_user,
+    "shell_exec_tool": shell_exec_tool,
+    "notify_user_tool": notify_user_tool,
 }
 
 
@@ -142,7 +150,7 @@ def safe_configure_gemini() -> Tuple[Any, Optional[str]]:
 MODEL, MODEL_ERR = safe_configure_gemini()
 
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="../templates")
 app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET", "dev-secret")
 socketio = SocketIO(app)
 
@@ -153,6 +161,16 @@ def index():
     response.headers['Permissions-Policy'] = 'fullscreen=*, clipboard-read=*, clipboard-write=*'
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     return response
+
+
+@app.route("/version")
+def version():
+    """Return application version info"""
+    return {
+        "name": "TTKi-cli",
+        "version": __version__,
+        "description": "Terminal AI + Desktop Environment"
+    }
 
 
 @socketio.on("connect")
@@ -272,7 +290,7 @@ def handle_message(message):
                             # Create safe environment for execution
                             safe_globals = {
                                 'shell_exec': shell_exec,
-                                'message_notify_user': message_notify_user,
+                                'message_notify_user': notify_user_tool,
                                 'shell': lambda command: shell_exec(command),
                                 'print': lambda *args: socketio.emit("message", " ".join(str(arg) for arg in args))
                             }

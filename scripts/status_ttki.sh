@@ -7,8 +7,8 @@ echo "🔍 TTKi-cli - Status usług"
 echo "=========================="
 
 # Source port configuration
-if [ -f "ports.conf" ]; then
-    source ports.conf
+if [ -f "../config/ports.conf" ]; then
+    source ../config/ports.conf
 fi
 
 # Function to check if port is listening
@@ -52,7 +52,7 @@ check_url "http://localhost:4051" "noVNC Web"
 
 echo ""
 echo "🔧 Procesy TTKi-cli:"
-ps aux | grep -E "(Xvnc.*:50|websockify.*4051|python.*app.py|http.server.*4000)" | grep -v grep | while read line; do
+ps aux | grep -E "(Xvnc.*:50|websockify.*4051|python.*src/app.py|http.server.*4000)" | grep -v grep | while read line; do
     echo "  → $line" | cut -d' ' -f11-
 done
 
@@ -63,6 +63,6 @@ echo "• AI Terminal:    http://localhost:4001"
 echo "• Desktop (VNC):  http://localhost:4051"
 echo ""
 echo "🔧 Zarządzanie:"
-echo "• Start:    ./start_ttki.sh"
-echo "• Stop:     ./stop_ttki.sh"
-echo "• Restart:  ./restart_ttki.sh"
+echo "• Start:    ./ttki.sh start"
+echo "• Stop:     ./ttki.sh stop"
+echo "• Restart:  ./ttki.sh restart"
