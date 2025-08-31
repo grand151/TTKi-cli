@@ -38,5 +38,9 @@ htmlcov/
 # Deprecated/Old scripts
 scripts/secure_manus.sh
 
+# Project rules (local development only)
+.rules
+TEMPLATES.md
+
 # Backup files (keep in repo for safety)
 # backup/
