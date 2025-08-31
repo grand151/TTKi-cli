@@ -540,6 +540,13 @@ Example responses for desktop operations:
                             func_name = call_data['name']
                             params = call_data['parameters']
                             
+                            # Special handling for common AI responses that shouldn't be treated as functions
+                            if func_name in ['message', 'text', 'response', 'reply']:
+                                # These are likely AI trying to send a regular message, not function calls
+                                message_text = params.get('text', params.get('content', str(params)))
+                                socketio.emit("message", f"🤖 TTKi: {message_text}")
+                                return
+                            
                             func = TOOL_FUNCTIONS.get(func_name)
                             if func:
                                 try:
@@ -572,6 +579,13 @@ Example responses for desktop operations:
                             if 'name' in call and 'parameters' in call:
                                 func_name = call['name']
                                 params = call['parameters']
+                                
+                                # Special handling for common AI responses that shouldn't be treated as functions
+                                if func_name in ['message', 'text', 'response', 'reply']:
+                                    # These are likely AI trying to send a regular message, not function calls
+                                    message_text = params.get('text', params.get('content', str(params)))
+                                    socketio.emit("message", f"🤖 TTKi: {message_text}")
+                                    continue
                                 
                                 func = TOOL_FUNCTIONS.get(func_name)
                                 if func:
@@ -614,6 +628,13 @@ Example responses for desktop operations:
                                 param_value = param_tag.text or ""
                                 if param_name:
                                     params[param_name] = param_value
+                            
+                            # Special handling for common AI responses that shouldn't be treated as functions
+                            if func_name in ['message', 'text', 'response', 'reply']:
+                                # These are likely AI trying to send a regular message, not function calls
+                                message_text = params.get('text', params.get('content', str(params)))
+                                socketio.emit("message", f"🤖 TTKi: {message_text}")
+                                continue
                             
                             func = TOOL_FUNCTIONS.get(func_name)
                             if func:
@@ -805,17 +826,6 @@ def agent_get_context() -> Dict[str, Any]:
         "error": "No agent system available",
         "system_type": "basic_mode"
     }
-                for action in ttki_agent.get_recent_actions(5)
-            ],
-            "memory_keys": list(ttki_agent.memory.keys()),
-            "state": {
-                "active_context": ttki_agent.state.active_context.value,
-                "session_start": ttki_agent.state.session_start.isoformat()
-            },
-            "context_summary": ttki_agent.get_context_summary()
-        }
-    except Exception as e:
-        return {"error": f"Failed to get context: {str(e)}"}
 
 def agent_store_memory(key: str, value: str) -> Dict[str, Any]:
     """
