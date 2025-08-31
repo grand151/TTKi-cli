@@ -28,19 +28,14 @@ RUN apt-get update && apt-get install -y \
     vim \
     python3 \
     python3-pip \
-    nodejs \
-    npm \
-    # GUI applications
-    firefox \
+    # Terminal applications
     konsole \
     xterm \
+    # Additional desktop utilities
+    firefox \
+    gedit \
     # System utilities
-    sudo \
     dbus-x11 \
-    x11-utils \
-    x11-xserver-utils \
-    xfonts-base \
-    # Clean up
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -53,111 +48,114 @@ RUN useradd -m -s /bin/bash $USER \
 USER $USER
 WORKDIR $HOME
 
-# Create VNC directories
+# Create necessary directories
 RUN mkdir -p $HOME/.vnc \
-    && mkdir -p $HOME/.config/openbox
+    && mkdir -p $HOME/.config/openbox \
+    && mkdir -p $HOME/.config/tint2
 
 # Configure VNC
 RUN echo "password" | vncpasswd -f > $HOME/.vnc/passwd \
     && chmod 600 $HOME/.vnc/passwd
 
-# Create VNC startup script
-RUN cat > $HOME/.vnc/xstartup << 'EOF'
-#!/bin/bash
-export XKL_XMODMAP_DISABLE=1
-unset SESSION_MANAGER
-unset DBUS_SESSION_BUS_ADDRESS
-
-# Start D-Bus
-if [ -x /usr/bin/dbus-launch ] && [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
-    eval $(dbus-launch --sh-syntax --exit-with-session)
-fi
-
-# Start window manager
-openbox-session &
-
-# Start panel
-tint2 &
-
-# Wait a bit then start applications
-sleep 2
-
-# Start terminal
-konsole &
-
-# Keep running
-while true; do
-    sleep 3600
-done
-EOF
+# Create VNC startup script with proper escaping
+RUN cat > $HOME/.vnc/xstartup << 'EOFX' \
+#!/bin/bash \
+export XKL_XMODMAP_DISABLE=1 \
+unset SESSION_MANAGER \
+unset DBUS_SESSION_BUS_ADDRESS \
+\
+# Start D-Bus \
+if [ -x /usr/bin/dbus-launch ] && [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then \
+    eval $(dbus-launch --sh-syntax --exit-with-session) \
+fi \
+\
+# Start window manager \
+openbox-session & \
+\
+# Start panel \
+tint2 & \
+\
+# Wait a bit then start applications \
+sleep 2 \
+\
+# Start terminal \
+konsole & \
+\
+# Keep running \
+while true; do \
+    sleep 3600 \
+done \
+EOFX
 
 RUN chmod +x $HOME/.vnc/xstartup
 
-# Configure Openbox
-RUN cat > $HOME/.config/openbox/autostart << 'EOF'
-# Start tint2 panel
-tint2 &
+# Configure Openbox with proper escaping
+RUN cat > $HOME/.config/openbox/autostart << 'EOFX' \
+# Start tint2 panel \
+tint2 & \
+\
+# Start file manager \
+pcmanfm --desktop & \
+EOFX
 
-# Start file manager daemon
-pcmanfm --daemon &
-EOF
+# Configure tint2 panel with proper escaping  
+RUN cat > $HOME/.config/tint2/tint2rc << 'EOFX' \
+# Panel configuration \
+panel_items = LTSC \
+panel_position = bottom center horizontal \
+panel_size = 100% 30 \
+panel_background_id = 1 \
+\
+taskbar_mode = single_desktop \
+task_maximum_size = 140 20 \
+\
+systray_padding = 0 4 2 \
+systray_background_id = 0 \
+\
+clock_fmt = %H:%M \
+clock_padding = 6 0 \
+\
+background_color = #000000 60 \
+border_color = #FFFFFF 18 \
+EOFX
 
-# Configure tint2 panel
-RUN mkdir -p $HOME/.config/tint2 \
-    && cat > $HOME/.config/tint2/tint2rc << 'EOF'
-# Tint2 config
-panel_items = TSC
-panel_position = bottom center horizontal
-panel_size = 100% 32
-panel_background_id = 1
-
-taskbar_mode = multi_desktop
-task_maximum_size = 150 35
-
-systray_padding = 4 4 4
-systray_background_id = 0
-
-clock_fmt = %H:%M
-clock_padding = 8 0
-
-background_color = #000000 60
-border_color = #ffffff 20
-EOF
-
-# Install VS Code
-RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg \
-    && cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/packages.microsoft.gpg \
+# Install VS Code (optional, can be removed if not needed)
+USER root
+RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg \
+    && install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/ \
     && echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list \
     && apt-get update \
     && apt-get install -y code \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Create startup script
-RUN cat > $HOME/start_desktop.sh << 'EOF'
-#!/bin/bash
-set -e
+USER $USER
 
-echo "🖥️  Starting TTKi AI Desktop Environment..."
-
-# Start VNC server
-echo "Starting VNC server on display :50..."
-vncserver :50 -geometry 1024x768 -depth 24 -localhost no
-
-# Wait for VNC to start
-sleep 3
-
-# Start noVNC/websockify
-echo "Starting noVNC web interface on port 4051..."
-websockify --web /usr/share/novnc 4051 localhost:5950 &
-
-echo "✅ Desktop environment ready!"
-echo "🌐 Access via: http://localhost:4051/vnc.html"
-echo "🔗 VNC Direct: localhost:5950"
-
-# Keep container running
-tail -f /dev/null
-EOF
+# Create startup script with proper escaping
+RUN cat > $HOME/start_desktop.sh << 'EOFX' \
+#!/bin/bash \
+set -e \
+\
+echo "🖥️  Starting TTKi AI Desktop Environment..." \
+\
+# Start VNC server \
+echo "Starting VNC server on display :50..." \
+vncserver :50 -geometry 1024x768 -depth 24 -localhost no \
+\
+# Wait for VNC to start \
+sleep 3 \
+\
+# Start noVNC/websockify \
+echo "Starting noVNC web interface on port 4051..." \
+websockify --web /usr/share/novnc 4051 localhost:5950 & \
+\
+echo "✅ Desktop environment ready!" \
+echo "🌐 Access via: http://localhost:4051/vnc.html" \
+echo "🔗 VNC Direct: localhost:5950" \
+\
+# Keep container running \
+tail -f /dev/null \
+EOFX
 
 RUN chmod +x $HOME/start_desktop.sh
 

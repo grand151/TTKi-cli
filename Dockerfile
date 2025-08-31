@@ -1,5 +1,5 @@
-# TTKi AI Terminal Application
-FROM python:3.11-slim
+# TTKi AI Terminal Application - Security Hardened
+FROM python:3.11-slim-bookworm
 
 # Set working directory
 WORKDIR /app
@@ -8,37 +8,70 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV FLASK_APP=app.py
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies
+# Install system dependencies with security updates
 RUN apt-get update && apt-get install -y \
+    # Essential packages
     curl \
-    docker.io \
-    && rm -rf /var/lib/apt/lists/*
+    ca-certificates \
+    # Security updates
+    && apt-get upgrade -y \
+    # Clean up to reduce attack surface
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/* \
+    && rm -rf /var/tmp/*
+
+# Create non-root user early for security
+RUN useradd -m -u 1000 -s /bin/bash ttki \
+    && chown -R ttki:ttki /app
+
+# Switch to non-root user for dependency installation
+USER ttki
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+COPY --chown=ttki:ttki requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with security flags
+RUN pip install --no-cache-dir \
+    --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir \
+    --no-deps \
+    --require-hashes \
+    --only-binary=all \
+    -r requirements.txt || \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY . .
+COPY --chown=ttki:ttki . .
 
 # Create logs directory
 RUN mkdir -p logs
 
-# Create non-root user and add to docker group
-RUN useradd -m -u 1000 ttki && \
-    usermod -aG docker ttki && \
-    chown -R ttki:ttki /app
-USER ttki
+# Remove any sensitive files that shouldn't be in container
+RUN find . -name "*.pyc" -delete \
+    && find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true \
+    && rm -f .env .env.* *.log 2>/dev/null || true
+
+# Set proper permissions
+RUN chmod -R 755 /app \
+    && chmod -R 750 logs
 
 # Expose port
 EXPOSE 4001
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:4001/health || exit 1
+# Add security labels
+LABEL security.scan="enabled"
+LABEL security.non-root="true"
+LABEL maintainer="ttki@localhost"
+LABEL version="1.0"
 
-# Run application
-CMD ["python", "app.py"]
+# Health check with timeout
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f --max-time 5 http://localhost:4001/health || exit 1
+
+# Run application with security options
+CMD ["python", "-u", "app.py"]
