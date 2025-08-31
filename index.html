@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Terminal + Desktop Environment</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        .services {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .service-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+        }
+        .service-card h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        .service-card p {
+            margin-bottom: 20px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+        .status-item {
+            margin: 5px 0;
+        }
+        .status-online {
+            color: #4ade80;
+        }
+        .status-offline {
+            color: #f87171;
+        }
+        .demo-section {
+            margin-top: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .demo-frame {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            height: 400px;
+        }
+        .demo-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        @media (max-width: 768px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+            .demo-frame {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AI Terminal + Desktop</h1>
+        <p class="subtitle">Kompletne środowisko deweloperskie z terminalem AI i pulpitem w przeglądarce</p>
+        
+        <div class="services">
+            <div class="service-card">
+                <h2>🤖 AI Terminal</h2>
+                <p>Inteligentny terminal z asystentem AI. Wykonuj komendy, otrzymuj pomoc i automatyzuj zadania używając sztucznej inteligencji.</p>
+                <a href="http://localhost:4001" class="btn" target="_blank">Otwórz AI Terminal</a>
+            </div>
+            
+            <div class="service-card">
+                <h2>🖥️ Pulpit w Przeglądarce</h2>
+                <p>Pełne środowisko graficzne z VS Code, przeglądarką i aplikacjami dostępne przez noVNC. Hasło VNC jest wymagane przy pierwszym połączeniu.</p>
+                <a href="http://localhost:4051/vnc.html?autoconnect=true&resize=scale" class="btn" target="_blank">Otwórz Pulpit</a>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎥 Podgląd na żywo</h2>
+            <p>Oba środowiska działają jednocześnie i są ze sobą zintegrowane</p>
+            
+            <div class="demo-grid">
+                <div class="demo-frame">
+                    <iframe src="http://localhost:4001" title="AI Terminal"></iframe>
+                </div>
+                <div class="demo-frame">
+                    <iframe src="http://localhost:4051/vnc.html?autoconnect=true&resize=scale" title="Desktop Environment"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status">
+        <div class="status-item">
+            <span id="ai-status">🤖 AI Terminal: <span class="status-offline">Sprawdzanie...</span></span>
+        </div>
+        <div class="status-item">
+            <span id="vnc-status">🖥️ VNC Desktop: <span class="status-offline">Sprawdzanie...</span></span>
+        </div>
+        <div class="status-item">
+            <span id="novnc-status">🌐 noVNC Web: <span class="status-offline">Sprawdzanie...</span></span>
+        </div>
+    </div>
+
+    <script>
+        // Sprawdź status usług
+        async function checkServices() {
+            const services = [
+                { id: 'ai-status', url: 'http://localhost:4001', name: 'AI Terminal' },
+                { id: 'vnc-status', url: 'http://localhost:4050', name: 'VNC Desktop' },
+                { id: 'novnc-status', url: 'http://localhost:4051', name: 'noVNC Web' }
+            ];
+
+            for (const service of services) {
+                try {
+                    const response = await fetch(service.url, { mode: 'no-cors' });
+                    document.getElementById(service.id).innerHTML = 
+                        `🟢 ${service.name}: <span class="status-online">Online</span>`;
+                } catch (error) {
+                    document.getElementById(service.id).innerHTML = 
+                        `🔴 ${service.name}: <span class="status-offline">Offline</span>`;
+                }
+            }
+        }
+
+        // Sprawdź status przy załadowaniu i co 30 sekund
+        checkServices();
+        setInterval(checkServices, 30000);
+    </script>
+</body>
+</html>

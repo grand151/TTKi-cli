@@ -1,0 +1,329 @@
+"""Minimal app module for Manus prompt + functions.
+
+This file loads the prompt and function definitions from external text files.
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+import json
+import re
+import subprocess
+import xml.etree.ElementTree as ET
+from pathlib import Path
+from typing import Dict, List, Tuple, Optional, Any, Callable
+
+from flask import Flask, render_template, make_response
+from flask_socketio import SocketIO
+
+ROOT = Path(__file__).parent
+
+
+def load_text_file(filename: str, fallback: str = "Plik niedostępny") -> str:
+    p = ROOT / filename
+    if p.exists():
+        try:
+            return p.read_text(encoding="utf-8")
+        except Exception:
+            return fallback
+    return fallback
+
+
+PROMPT_TEXT = load_text_file("Manus_Prompt.txt", "# Manus prompt not found.")
+FUNCTIONS_TEXT = load_text_file("Manus_Functions.txt", "{}")
+
+
+def extract_json_objects(text: str) -> List[Dict]:
+    """Extract JSON objects from text that may contain markdown and other content."""
+    objs: List[Dict] = []
+    
+    # Szukamy JSON bloków w markdown
+    import re
+    json_blocks = re.findall(r'```json\s*(.*?)\s*```', text, re.DOTALL)
+    
+    for block in json_blocks:
+        # Szukamy obiektów JSON w bloku - każdy może być w osobnej linii
+        lines = block.strip().split('\n')
+        current_obj = ""
+        brace_count = 0
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+                
+            current_obj += line
+            brace_count += line.count('{') - line.count('}')
+            
+            # Gdy nawiasy się zrównoważą, mamy kompletny obiekt
+            if brace_count == 0 and current_obj.strip():
+                try:
+                    obj = json.loads(current_obj.strip())
+                    if isinstance(obj, dict):
+                        objs.append(obj)
+                except json.JSONDecodeError:
+                    pass
+                current_obj = ""
+    
+    return objs
+
+
+def manus_shell_exec(id: str = "", exec_dir: str = "", command: str = "") -> str:
+    if not command:
+        return ""
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=60)
+        return (result.stdout or "") + (result.stderr or "")
+    except Exception as e:
+        return f"shell_exec error: {e}"
+
+
+def manus_message_notify_user(text: str, attachments: Optional[List[str]] = None) -> str:
+    if attachments:
+        return f"Notify user: {text} (attachments: {attachments})"
+    return f"Notify user: {text}"
+
+
+def shell_exec(command: str, exec_dir: str = "/tmp") -> str:
+    """Execute shell command and return result"""
+    try:
+        import os
+        original_dir = os.getcwd()
+        if exec_dir and os.path.exists(exec_dir):
+            os.chdir(exec_dir)
+        
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+        
+        os.chdir(original_dir)
+        
+        output = f"Exit code: {result.returncode}\n"
+        if result.stdout:
+            output += f"Output:\n{result.stdout}\n"
+        if result.stderr:
+            output += f"Errors:\n{result.stderr}\n"
+        
+        return output
+    except Exception as e:
+        return f"Shell execution error: {e}"
+
+
+def message_notify_user(text: str, attachments=None) -> str:
+    """Notify user with message"""
+    return f"Notification: {text}"
+
+
+# Tool functions mapping
+TOOL_FUNCTIONS = {
+    "shell_exec": shell_exec,
+    "message_notify_user": message_notify_user,
+}
+
+
+def safe_configure_gemini() -> Tuple[Any, Optional[str]]:
+    try:
+        import google.generativeai as genai
+    except Exception:
+        return None, "google.generativeai not installed"
+
+    # Domyślny klucz API jeśli nie ma zmiennej środowiskowej
+    api_key = os.environ.get("GEMINI_API_KEY", "AIzaSyDIiTijoYVlpAMgTjvR4VTRgfguHGo5SVE")
+    if not api_key:
+        return None, "GEMINI_API_KEY not set"
+
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        return model, None
+    except Exception as e:
+        return None, str(e)
+
+
+MODEL, MODEL_ERR = safe_configure_gemini()
+
+
+app = Flask(__name__)
+app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET", "dev-secret")
+socketio = SocketIO(app)
+
+
+@app.route("/")
+def index():
+    response = app.make_response(render_template("index.html"))
+    response.headers['Permissions-Policy'] = 'fullscreen=*, clipboard-read=*, clipboard-write=*'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    return response
+
+
+@socketio.on("connect")
+def handle_connect():
+    print("Client connected")
+
+
+@socketio.on("disconnect")
+def handle_disconnect():
+    print("Client disconnected")
+
+
+@socketio.on("message")
+def handle_message(message):
+    print(f"Received message: {message}")
+    
+    if MODEL is None:
+        print(f"Model not available: {MODEL_ERR}")
+        socketio.emit("message", f"Gemini model not available: {MODEL_ERR}")
+        return
+    
+    # Sprawdzenie klucza API
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("No GEMINI_API_KEY found")
+        socketio.emit("message", "Error: GEMINI_API_KEY not set. Please set your API key first.")
+        return
+        
+    try:
+        print("Generating response...")
+        prompt = PROMPT_TEXT + "\nUser message: " + str(message)
+        response = MODEL.generate_content(prompt)
+        print(f"Response received: {response}")
+        
+        # Sprawdzenie czy odpowiedź jest poprawna
+        if not response.candidates:
+            print("No response candidates")
+            socketio.emit("message", "No response candidates from model")
+            return
+            
+        candidate = response.candidates[0]
+        finish_reason = getattr(candidate, 'finish_reason', None)
+        print(f"Finish reason: {finish_reason}")
+        
+        # Sprawdzenie finish_reason
+        if finish_reason and finish_reason != 1:  # 1 = STOP (normal completion)
+            reason_map = {
+                2: "MAX_TOKENS", 3: "SAFETY", 4: "RECITATION", 
+                5: "OTHER", 12: "BLOCKED_SAFETY_FILTER"
+            }
+            reason_name = reason_map.get(finish_reason, f"UNKNOWN({finish_reason})")
+            print(f"Response blocked: {reason_name}")
+            socketio.emit("message", f"Response blocked by Gemini: {reason_name}. Try rephrasing your message.")
+            return
+        
+        # Pobieranie tekstu odpowiedzi
+        text = ""
+        if hasattr(response, 'text') and response.text:
+            text = response.text.strip()
+        elif candidate.content and candidate.content.parts:
+            text = "".join(part.text for part in candidate.content.parts if hasattr(part, 'text')).strip()
+        
+        print(f"Response text: {text[:100]}...")
+        
+        if not text:
+            print("Empty response text")
+            socketio.emit("message", "Empty response from model")
+            return
+            
+        # Parse function calls - handle multiple formats
+        try:
+            # Try new format first: <function_calls><call><tool_code>...</tool_code></call></function_calls>
+            if "<function_calls>" in text and "<call>" in text:
+                print("Parsing new function_calls format")
+                
+                # Extract tool_code content
+                tool_code_pattern = r'<tool_code>(.*?)</tool_code>'
+                matches = re.findall(tool_code_pattern, text, re.DOTALL)
+                
+                for code in matches:
+                    code = code.strip()
+                    print(f"Executing tool code: {code}")
+                    
+                    # Parse different function call patterns
+                    if 'shell_exec(' in code:
+                        # Extract command from shell_exec(command="...")
+                        cmd_pattern = r'shell_exec\(\s*command\s*=\s*["\']([^"\']+)["\']'
+                        cmd_match = re.search(cmd_pattern, code)
+                        if cmd_match:
+                            command = cmd_match.group(1)
+                            result = shell_exec(command)
+                            socketio.emit("message", f"Shell: {command}\n{result}")
+                            continue
+                    
+                    if 'shell(' in code:
+                        # Handle simple shell(command="...") format
+                        cmd_pattern = r'shell\(\s*(?:command\s*=\s*)?["\']([^"\']+)["\']'
+                        cmd_match = re.search(cmd_pattern, code)
+                        if cmd_match:
+                            command = cmd_match.group(1)
+                            result = shell_exec(command)
+                            socketio.emit("message", f"Shell: {command}\n{result}")
+                            continue
+                    
+                    if 'message_notify_user(' in code:
+                        # Extract message from message_notify_user(text="...")
+                        msg_pattern = r'message_notify_user\(\s*(?:text\s*=\s*)?["\']([^"\']+)["\']'
+                        msg_match = re.search(msg_pattern, code)
+                        if msg_match:
+                            message = msg_match.group(1)
+                            socketio.emit("message", f"AI: {message}")
+                            continue
+                    
+                    # Try to execute as Python code (for print statements etc.)
+                    if code.startswith('print('):
+                        try:
+                            # Create safe environment for execution
+                            safe_globals = {
+                                'shell_exec': shell_exec,
+                                'message_notify_user': message_notify_user,
+                                'shell': lambda command: shell_exec(command),
+                                'print': lambda *args: socketio.emit("message", " ".join(str(arg) for arg in args))
+                            }
+                            exec(code, safe_globals)
+                        except Exception as e:
+                            socketio.emit("message", f"Execution error: {e}")
+                        continue
+                    
+                    # Default: treat as regular message
+                    socketio.emit("message", f"AI: {code}")
+                return
+            
+            # Try old XML format: <function_calls><invoke name="..."><parameter>...</parameter></invoke></function_calls>
+            root = ET.fromstring(text)
+            if root.tag == "function_calls":
+                for invoke_tag in root.findall("invoke"):
+                    function_name = invoke_tag.get("name")
+                    if not function_name:
+                        continue
+                        
+                    params = {}
+                    for param_tag in invoke_tag.findall("parameter"):
+                        param_name = param_tag.get("name")
+                        param_value = param_tag.text or ""
+                        if param_name:
+                            params[param_name] = param_value
+                    
+                    func = TOOL_FUNCTIONS.get(function_name)
+                    if func:
+                        try:
+                            output = func(**params)
+                            socketio.emit("message", f"Tool {function_name}: {output}")
+                        except Exception as e:
+                            socketio.emit("message", f"Tool error: {e}")
+                    else:
+                        socketio.emit("message", f"Unknown tool: {function_name}")
+            else:
+                socketio.emit("message", f"Model: {text}")
+        except ET.ParseError:
+            # Not XML, treat as regular text
+            socketio.emit("message", f"Model: {text}")
+        except Exception as e:
+            print(f"Function parsing error: {e}")
+            socketio.emit("message", f"Model: {text}")
+            
+    except Exception as e:
+        print(f"Exception in handle_message: {e}")
+        import traceback
+        traceback.print_exc()
+        socketio.emit("message", f"Error: {e}")
+
+
+if __name__ == "__main__":
+    socketio.run(app, port=5002, debug=True, allow_unsafe_werkzeug=True)
