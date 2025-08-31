@@ -8,7 +8,7 @@ from src.models.user import db
 from src.routes.user import user_bp
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
-app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-please-change')
 
 app.register_blueprint(user_bp, url_prefix='/api')
 

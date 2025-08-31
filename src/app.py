@@ -134,10 +134,10 @@ def safe_configure_gemini() -> Tuple[Any, Optional[str]]:
     except Exception:
         return None, "google.generativeai not installed"
 
-    # Domyślny klucz API jeśli nie ma zmiennej środowiskowej
-    api_key = os.environ.get("GEMINI_API_KEY", "AIzaSyDIiTijoYVlpAMgTjvR4VTRgfguHGo5SVE")
+    # Wymagany klucz API z zmiennej środowiskowej
+    api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        return None, "GEMINI_API_KEY not set"
+        return None, "GEMINI_API_KEY environment variable not set"
 
     try:
         genai.configure(api_key=api_key)

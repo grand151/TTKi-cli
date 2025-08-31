@@ -1,8 +1,9 @@
 import openai
+import os
 
 def chat_with_ai(prompt):
-    openai.api_key = "YOUR_OPENAI_API_KEY" # This will be replaced by the actual key from environment variables
-    openai.api_base = "YOUR_OPENAI_API_BASE" # This will be replaced by the actual base from environment variables
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    openai.api_base = os.environ.get("OPENAI_API_BASE")
     try:
         response = openai.chat.completions.create(
             model="Qwen/Qwen3-Coder-480B-A35B",

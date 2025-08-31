@@ -39,8 +39,19 @@ sudo apt install tigervnc-standalone-server tigervnc-viewer
 # Konfiguracja VNC hasła
 vncpasswd
 
-# Ustawienie Google Gemini API Key
-export GEMINI_API_KEY="your_api_key_here"
+# Konfiguracja zmiennych środowiskowych (BEZPIECZEŃSTWO!)
+# 1. Skopiuj plik przykładowy
+cp .env.example .env
+
+# 2. Edytuj .env i dodaj swój prawdziwy klucz API
+nano .env
+
+# LUB ustaw zmienne środowiskowe bezpośrednio:
+export GEMINI_API_KEY="your_actual_api_key_here"
+export FLASK_SECRET_KEY="your_secure_secret_key_here"
+```
+
+⚠️ **UWAGA BEZPIECZEŃSTWA**: Nigdy nie commituj pliku `.env` do git! Zawiera on prywatne klucze API.
 ```
 
 ### Uruchomienie
@@ -75,12 +86,14 @@ Po uruchomieniu dostępne są następujące adresy:
 ### Zmienne środowiskowe
 
 ```bash
-# Google Gemini AI
-export GEMINI_API_KEY="your_api_key_here"
+# Google Gemini AI (WYMAGANE)
+export GEMINI_API_KEY="your_actual_gemini_api_key_here"
 
-# Flask (opcjonalne)
-export FLASK_SECRET="your_secret_key"
+# Flask Security (WYMAGANE dla produkcji)
+export FLASK_SECRET_KEY="your_secure_random_secret_key_here"
 ```
+
+⚠️ **BEZPIECZEŃSTWO**: Użyj `.env` pliku dla zmiennych środowiskowych zamiast exportu w terminalu!
 
 ## 🏗️ Architektura
 

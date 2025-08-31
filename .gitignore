@@ -8,6 +8,11 @@ venv/
 env/
 ENV/
 
+# Environment variables (NEVER commit these!)
+.env
+.env.local
+.env.production
+
 # Logs
 *.log
 logs/
